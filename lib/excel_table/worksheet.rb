@@ -33,6 +33,10 @@ module ExcelTable
       @package.serialize(@save_filename)
     end
 
+    def to_str
+      @package.to_stream.read
+    end
+
     private
 
     def prepare_styles
