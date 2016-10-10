@@ -6,16 +6,29 @@ module ExcelTable
     attr_reader :save_filename
 
     def initialize(params={})
-      @package = Axlsx::Package.new
+      @package  = Axlsx::Package.new
       @workbook = @package.workbook
       prepare_styles
       @headings = params.fetch(:headings, [])
-      @rows = params.fetch(:rows, [])
+      @rows     = params.fetch(:rows, [])
     end
 
     def save(params={})
+      update_workbook(params)
+      @save_filename = params.fetch(:save_filename, 'default.xlsx')
+      @package.serialize(@save_filename)
+    end
+
+    def to_str(params={})
+      update_workbook(params)
+      @package.to_stream(true).read
+    end
+
+    private
+
+    def update_workbook(params={})
       style = params.fetch(:style, false)
-      name = params.fetch(:name){ | key | warn "sheet #{key} not provided, use `Sheet1' by default"; 'Sheet1'}
+      name  = params.fetch(:name) { |key| warn "sheet #{key} not provided, use `Sheet1' by default"; 'Sheet1' }
       params.merge!(:name => name)
       @workbook.add_worksheet(params) do |sheet|
         # Applies the black_cell style to the first and third cell, and the blue_cell style to the second.
@@ -28,32 +41,23 @@ module ExcelTable
 
         add_style(sheet, headings) if style
       end
-
-      @save_filename = params.fetch(:save_filename, 'default.xlsx')
-      @package.serialize(@save_filename)
     end
-
-    def to_str
-      @package.to_stream.read
-    end
-
-    private
 
     def prepare_styles
       @workbook.styles do |s|
-        left_border = {border: {edges: [:left, :bottom], style: :thin, :color => '00'}}
-        right_border = {border: {edges: [:right, :bottom], style: :thin, :color => '00'}}
+        left_border  = { border: { edges: [:left, :bottom], style: :thin, :color => '00' } }
+        right_border = { border: { edges: [:right, :bottom], style: :thin, :color => '00' } }
 
         @odd_first_column_style = s.add_style odd_row_style.merge(left_border)
-        @odd_last_column_style =s.add_style odd_row_style.merge(right_border)
+        @odd_last_column_style  =s.add_style odd_row_style.merge(right_border)
 
         @even_first_column_style = s.add_style even_row_style.merge(left_border)
-        @even_last_column_style =s.add_style even_row_style.merge(right_border)
+        @even_last_column_style  =s.add_style even_row_style.merge(right_border)
 
 
-        @header_row = s.add_style :bg_color => '00', :fg_color => 'FF', :sz => 12, :alignment => {:horizontal => :left}
-        @odd_row = s.add_style odd_row_style
-        @even_row = s.add_style even_row_style
+        @header_row = s.add_style :bg_color => '00', :fg_color => 'FF', :sz => 12, :alignment => { :horizontal => :left }
+        @odd_row    = s.add_style odd_row_style
+        @even_row   = s.add_style even_row_style
       end
     end
 
@@ -62,13 +66,13 @@ module ExcelTable
       (first_row..sheet.rows.size - 1).each do |index|
         row = sheet.rows[index]
         if index.odd?
-          row.style = @even_row
+          row.style             = @even_row
           row.cells.first.style = @even_first_column_style
-          row.cells.last.style = @even_last_column_style
+          row.cells.last.style  = @even_last_column_style
         else
-          row.style = @odd_row
+          row.style             = @odd_row
           row.cells.first.style = @odd_first_column_style
-          row.cells.last.style = @odd_last_column_style
+          row.cells.last.style  = @odd_last_column_style
         end
       end
     end
@@ -77,13 +81,13 @@ module ExcelTable
       {
           bg_color: 'ff',
           fg_color: '00',
-          sz: 12,
+          sz:       12,
           alignment:
-              {horizontal: :left},
+                    { horizontal: :left },
           border:
-              {edges: [:bottom],
-               style: :thin,
-               color: '00'}
+                    { edges: [:bottom],
+                      style: :thin,
+                      color: '00' }
       }
     end
 
@@ -91,13 +95,13 @@ module ExcelTable
       {
           bg_color: 'CDCDCD',
           fg_color: '00',
-          sz: 12,
+          sz:       12,
           alignment:
-              {horizontal: :left},
+                    { horizontal: :left },
           border:
-              {edges: [:bottom],
-               style: :thin,
-               color: '00'}
+                    { edges: [:bottom],
+                      style: :thin,
+                      color: '00' }
       }
     end
 
