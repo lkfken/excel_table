@@ -13,6 +13,10 @@ module ExcelTable
       @rows     = params.fetch(:rows, [])
     end
 
+    def length
+      headings.size + rows.size
+    end
+
     def save(params={})
       update_workbook(params)
       @save_filename = params.fetch(:save_filename, 'default.xlsx')
